@@ -1,0 +1,2 @@
+--! SELECT CAST(MyVarcharCol AS INT) FROM Table
+--! SELECT CONVERT(INT, MyVarcharCol) FROM Table
