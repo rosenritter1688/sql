@@ -7,3 +7,4 @@ BEGIN
 	print @myINT;
 	set @myINT = @myINT -1;
 END;
+
