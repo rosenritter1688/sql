@@ -16,6 +16,8 @@ IF (@ret IS NULL)
     SET @ret = 0;
 RETURN @ret;
 END;
+
+
 -->sample 2
 IF 1 = 1
 PRINT 'Boolean_expression is true.'
