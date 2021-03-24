@@ -5,7 +5,7 @@
 
 DECLARE @myDate 
 DATETIME = GETDATE();
-
+--set @myTime = GETDATE() ---> cant do it in this way to replace DATETIME = GETDATE();
 SELECT format(@myDate, 'yy/mm/dd') 
 --21/53/13
 SELECT format(@myDate, 'yyyy/mm/dd')

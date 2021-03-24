@@ -1,4 +1,7 @@
---Ex: Round 四捨五入   
+--Ex: Round 四捨五入 
+https://docs.microsoft.com/zh-tw/sql/t-sql/functions/mathematical-functions-transact-sql?view=sql-server-ver15  
+
+
 print '-------rcd * 1.22---------------'
 select rcd * 1.22, round(rcd * 1.22, 0), round(rcd * 1.22, 1), round(rcd , 1.22 , 2) 
 
