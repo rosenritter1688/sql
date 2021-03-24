@@ -20,11 +20,10 @@
 
 --Syntax
 
-SELECT d.dep_name, s.std_name,c.course_name,r.rcd --* table column heading can ignore capitals
-FROM record r, course c, student s, department d  
-where r.std_id = s.std_id
-and	  r.COURSE_ID = c.COURSE_ID
-and	  s.dep_id = d.dep_id;	
+SELECT r.course_id , count(*)
+FROM record r, course c
+where r.COURSE_ID = c.COURSE_ID
+
 
 --OUTPUTz
 人類學研究所	陳承芬	微生物的妙用	71

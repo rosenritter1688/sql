@@ -36,6 +36,7 @@ SELECT format(@myDate, 'yyyy/mm/dd')
 */
 
 
+
 -->sample 3
 IF DATENAME(weekday, GETDATE()) IN (N'Saturday', N'Sunday')
 	SELECT ' Weekend';
