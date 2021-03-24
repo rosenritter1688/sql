@@ -3,17 +3,12 @@
 --宣告 DataTime 型態的變數 @myDate, 並立即用系統函數 GetDate 取得現在時間
 
 
-DECLARE @myDate 
-DATETIME = GETDATE();
---set @myTime = GETDATE() ---> cant do it in this way to replace DATETIME = GETDATE();
-SELECT format(@myDate, 'yy/mm/dd') 
---21/53/13
-SELECT format(@myDate, 'yyyy/mm/dd')
---2021/53/13
-SELECT format(1234567890.123, '#,###.###')
---1,234,567,890.123
-SELECT format(12345, '0,000,000')
---0,012,345
-SELECT format(654321, '000,000,000,000')
---000,000,654,321
+DECLARE @myDate DATETIME = GETDATE();
+SELECT format( @myDate, 'yy/mm/dd') as yymmdd , 
+       format( @myDate, 'yyyy/mm/dd') as yyyymmdd,
+       format(1234567890.123, '#,###.###') as 逗號區分和小數點三位, 
+	   format(12345, '0,000,000') as 逗號區分
 
+
+yymmdd	    yyyymmdd	逗號區分和小數點三位	逗號區分
+21/41/24	2021/41/24	1,234,567,890.123   	0,012,345

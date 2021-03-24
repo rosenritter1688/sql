@@ -5,7 +5,8 @@
 -- use temp and inner join table student 的學分總數欄位
 update Student
 set credits = t.credits 
-from #temp3 as t inner join Student as s 
+from #temp3 as t 
+inner join Student as s 
 on s.Std_id = t.std_id
 
 --TEMP#3

@@ -35,7 +35,9 @@ IN	To specify multiple possible values for a column
 
 --example
 'To fetch record of students with age equal to 20'
-SELECT * FROM Student WHERE Age=20;
+SELECT * 
+FROM Student 
+WHERE Age=20;
 
 --example 2
 'To fetch Name and Address of students with ROLL_NO greater than 3'
