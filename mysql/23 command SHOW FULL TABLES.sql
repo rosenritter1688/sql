@@ -1,0 +1,5 @@
+SHOW FULL TABLES;
+
+
+SHOW FULL TABLES 
+WHERE table_type = 'VIEW';
