@@ -193,22 +193,136 @@ FROM `data-sci-acad-learn-sql.TW14_N10.avg_daily_revenue_holiday`
 
 
 -- 3. 1 と 2 のデータを完全外部結合する avg_daily_revenue_holiday and avg_daily_revenue_non_holiday
--- something wrong error Syntax error: Illegal input character "\346" at [2:34]
+-- column name cant use japanese
+-- its done as same as page p.77
 SELECT 
-      non_holiday.avetemp_kbn AS 気温区分,
-      CASE
-            WHEN non_holiday.rainflag = 0
-                  THEN 降ってない
-                  ELSE 降った
-      END AS 雨,
-      non_holiday.avg_daily_revenue_non_holiday AS 平日 + avg_revenue     
-      holiday.daily_avg_revenue_holiday AS 休日 + avg_revenue
-FROM 
-      `data-sci-acad-learn-sql.TW14_N10.avg_daily_revenue_non_holiday` AS non_holiday
-FULL JOIN
+      non_holiday.avetemp_kbn,
+      CASE WHEN non_holiday.rainflag = '0'
+            THEN "降ってない"
+            ELSE "降った"
+      END AS rain_flg,  -- after end as cant use japanese here
+      non_holiday.avg_daily_revenue_non_holiday AS avg_revenue_non_holiday,
+      holiday.daily_avg_revenue_holiday AS avg_revenue_holiday
+FROM
       `data-sci-acad-learn-sql.TW14_N10.avg_daily_revenue_holiday` AS holiday
-ON 
-      non_holiday.avetemp_kbn = holiday.avetemp_kbn
+FULL JOIN
+      `data-sci-acad-learn-sql.TW14_N10.avg_daily_revenue_non_holiday` AS non_holiday
+ON
+      holiday.avetemp_kbn = non_holiday.avetemp_kbn 
       AND
-      non_holiday.rainflag = holiday.rainflag
+      holiday.rainflag = non_holiday.rainflag
+ORDER BY
+      non_holiday.avetemp_kbn,
+      non_holiday.rainflag
+--kadai 3
+--15～20[℃]で、雨が降っている平日の平均注文数を入力してください。
+
+
+--setp 4 create table for weekday and holiday
+--CREATE TABLE IF NOT EXISTS `data-sci-acad-learn-sql.TW14_N10.kadai3_datamart_weekday` AS
+CREATE TABLE IF NOT EXISTS `data-sci-acad-learn-sql.TW14_N10.kadai3_datamart_holiday` AS
+SELECT
+      *
+FROM (
+      -- SETP 3 LEFT JOIN table weather , holiday_master,気温を5℃毎に区切る,雨が降ったか降ってないかに分類する
+      SELECT 
+            daily_orders.*,
+            FORMAT("%02d", CAST((FLOOR( weather.avetemp / 5 ) * 5) AS INT64 ) )  || '-' || 
+            FORMAT("%02d", CAST(((FLOOR( weather.avetemp / 5 ) + 1 ) * 5 ) AS INT64 ) ) AS temp_kbn,
+            CASE WHEN weather.totprecip > 0
+                  THEN "降った"
+                  ELSE "降ってない"
+            END AS rain_flag,
+            CASE WHEN weather.weekday = "Sat" OR weather.weekday = "Sun" OR holiday_master.public_holiday IS NOT NULL
+                  THEN "休日"
+                  ELSE "平日"
+            END AS holiday_flag
+      FROM (
+            SELECT -- STEP 2, COUNT TOTAL ORDER PER DAY
+                  daily_orders.date_ymd,
+                  COUNT(daily_orders.date_ymd) AS orders
+            FROM (
+                  SELECT  -- STEP 1, UNION ALL 
+                        *
+                  FROM 
+                        `data-sci-acad-learn-sql.TW14_N10.order_report_1`
+                  UNION ALL
+                        SELECT 
+                              *
+                        FROM
+                              `data-sci-acad-learn-sql.TW14_N10.order_report_2`
+            )AS daily_orders -- FOR STEP 2
+            GROUP BY
+                  daily_orders.date_ymd
+      ) AS daily_orders -- FOR STEP 3
+      LEFT JOIN
+            `data-sci-acad-learn-sql.TW14_N10.weather` AS weather 
+      ON
+            daily_orders.date_ymd = weather.date_ymd
+      LEFT JOIN
+            `data-sci-acad-learn-sql.TW14_N10.holiday_master` AS holiday_master
+      ON
+            daily_orders.date_ymd = holiday_master.date_ymd
+
+) AS temp_table
+WHERE
+      temp_table.holiday_flag = "平日"
+
+--STEP 5 
+-- CACULATE AVG ORDER for weekday and save it to kadai3_temp_calc_weekday
+drop table `data-sci-acad-learn-sql.TW14_N10.kadai3_temp_calc_weekday`;
+create table if not exists `data-sci-acad-learn-sql.TW14_N10.kadai3_temp_calc_weekday` AS
+select 
+      TRUNC(  -- TAKE DECIMAL 2 PLACE
+            ROUND(avg(orders),2), -- ROUND UP DECIMAL 2 PLACE
+            2) AS weekday_avg_orders,
+      temp_kbn,
+      rain_flag
+from 
+      `data-sci-acad-learn-sql.TW14_N10.kadai3_datamart_weekday`
+group by
+      temp_kbn,
+      rain_flag
+order by
+      temp_kbn
+--STEP 6 
+-- CACULATE AVG ORDER for holiday and save it to kadai3_temp_calc_holiday
+create table if not exists `data-sci-acad-learn-sql.TW14_N10.kadai3_temp_calc_holiday` AS
+select 
+      TRUNC(  -- TAKE DECIMAL 2 PLACE
+            ROUND(avg(orders),2), -- ROUND UP DECIMAL 2 PLACE
+            2) AS holiday_avg_orders,
+      temp_kbn,
+      rain_flag
+from 
+      `data-sci-acad-learn-sql.TW14_N10.kadai3_datamart_holiday`
+group by
+      temp_kbn,
+      rain_flag
+order by
+      temp_kbn
+
+
+
+-- STEP 7
+-- FULL JOIN TABLES kadai3_datamart_holiday,kadai3_datamart_weekday
+-- FYI, mysql got not full join but left join + union + right join = full join
+
+SELECT 
+      weekday.temp_kbn,
+      weekday.rain_flag,
+      weekday.weekday_avg_orders,
+      holiday.holiday_avg_orders
+FROM
+      `data-sci-acad-learn-sql.TW14_N10.kadai3_temp_calc_holiday` AS holiday
+FULL JOIN
+-- NO FROM
+      `data-sci-acad-learn-sql.TW14_N10.kadai3_temp_calc_weekday` AS weekday
+ON
+      holiday.rain_flag = weekday.rain_flag
+      AND
+      holiday.temp_kbn = weekday.temp_kbn
+order by 
+      weekday.temp_kbn,
+      weekday.rain_flag
 

@@ -1,0 +1,6 @@
+CREATE TABLE student (
+id INT PRIMARY KEY,
+first_name VARCHAR(100) NOT NULL,
+last_name VARCHAR(100) NOT NULL,
+city_id INT FOREIGN KEY REFERENCES city(id)
+);

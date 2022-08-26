@@ -1,3 +1,6 @@
+
+# in windows
+
 # from pandas 
 # read csv import to mysql 
 
@@ -17,18 +20,26 @@ conn = sql.connect (
 )
 
 cursor = conn.cursor()
-excel_data = pd.read_csv('/home/bruce/Downloads/order_report_2.csv', index_col=False, delimiter = ',')
+df = pd.read_csv('/home/bruceashbee/Downloads/L_PURCHASE.csv', index_col=False, delimiter = ',')
 
-for row in excel_data.iterrows():
-    # testlist = row[0] downloaded csv from big query. row[0]  is data that stores row number
-    # therefore its useless
+n = 0
+for row in df.iterrows():
     testlist = row[1].values
-    print(testlist)
-    cursor.execute("INSERT INTO order_report_2 (order_id,date_ymd,taste,amount)"
-                   " VALUES('%s','%s','%s','%s')" % tuple(testlist))
+    print(tuple(testlist))
+    cursor.execute("INSERT INTO L_Purchase (date,p_code,quantity)"
+                   " VALUES('%s','%s','%s')" %tuple(testlist))
+    n += 1
+    print(f"{ n } record inserted")
 conn.commit()
 cursor.close()
 conn.close()
+
+
+
+
+
+
+
 
 
 
