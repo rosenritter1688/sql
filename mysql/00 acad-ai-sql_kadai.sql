@@ -325,4 +325,25 @@ ON
 order by 
       weekday.temp_kbn,
       weekday.rain_flag
+--kadai4
+select *
+from `data-sci-acad-learn-sql.TW14_N10.L_PURCHASE`
+
+select count(*)
+from `data-sci-acad-learn-sql.TW14_N10.m_product`
+-- for checking mysql database only
+select 
+      sum(temp_table.QUANTITY * temp_table.price)
+from (
+      select --full join table L_PURCHASE and m_product
+            l.*,
+            m.p_name,
+            m.price
+      from `data-sci-acad-learn-sql.TW14_N10.L_PURCHASE` AS l
+      FULL JOIN
+
+            `data-sci-acad-learn-sql.TW14_N10.m_product` AS m
+      ON 
+            l.p_code = m.p_code
+) AS temp_table
 
