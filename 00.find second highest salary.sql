@@ -23,11 +23,22 @@ SELECT name, MAX(salary) AS salary
 
 
 --There are other ways also as suggested by RajnishKrJha.
-SELECT name, MAX(salary) AS salary 
-FROM employee 
-WHERE salary IN
-(SELECT salary FROM employee MINUS SELECT MAX(salary) 
-FROM employee);
+SELECT 
+            name, MAX(salary) AS salary 
+FROM 
+            employee 
+WHERE 
+            salary 
+IN (
+               SELECT 
+                              salary 
+               FROM 
+                              employee 
+               MINUS SELECT 
+                              MAX(salary) 
+               FROM 
+                            employee
+);
 
 
 SELECT name, MAX(salary) AS salary 
