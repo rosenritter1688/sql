@@ -1,89 +1,151 @@
-DROP TABLE IF EXISTS `data-sci-acad-learn-sql.TW14_N10.datamart`;
-CREATE TABLE IF NOT EXISTS `data-sci-acad-learn-sql.TW14_N10.datamart` AS
---　table user_tran と　shop_userをleft join　していきます。
---  user年齢層を計算します
-SELECT
+
+drop table if exists `data-sci-acad-learn-sql.TW14_N10.datamart`;
+
+
+create table `data-sci-acad-learn-sql.TW14_N10.datamart` AS
+--テーブル　shop_user table と table 1 （カテゴリ毎の総額、総額）と table 2　（購入回数）left joinする
+-- 年齢層を区別する
+select
+    --　table shop_user
     shop_user.*,
-    summary_tran.food_amount,
-    summary_tran.sports_amount,	
-    summary_tran.fashion_amount,	
-    summary_tran.necessities_amount,	
-    summary_tran.Book_CD_DVD_amount,
-    summary_tran.total,
-    CONCAT(
-        FORMAT( "%02d", CAST( ( FLOOR(shop_user.age / 10) * 10 ) as INT64) ),
-        "-",
-        FORMAT( "%02d", CAST( ( ( FLOOR(shop_user.age / 10) + 1 ) * 10 - 1 ) as INT64) )
-    ) AS age_group
+    --　table 1 カテゴリ毎の総額、総額
+    total_amount.total_amount,
+    sub_total_table.book_cd_dvd_total,
+    sub_total_table.fashion_total,	
+    sub_total_table.food_total,	
+    sub_total_table.necessities_total,
+    sub_total_table.sports_total,
+    -- 年齢層を区別
+    format("%02d",CAST((floor(shop_user.age / 10)  * 10) AS int64)) || "-" ||
+    format("%02d",CAST(((floor(shop_user.age / 10) + 1 )  * 10 - 1) AS int64)) as age_group,
+    -- table 2 購入回数
+    purchase_no.total_buy_number,
+    purchase_no.Book_CD_DVD_buy_number,
+    purchase_no.Fashion_buy_number,
+    purchase_no.Food_buy_number,
+    purchase_no.Necessities_buy_number,
+    purchase_no.Sports_buy_number
 
-FROM
+from 
     `data-sci-acad-learn-sql.TW14_N10.shop_user` AS shop_user
-LEFT JOIN(
-            -- CONVERTING VERTICAL TABLES INTO HORIZONTAL TABLES
-            -- left join 前に
-            -- ユーザー毎に、１年間の購入額（総計）を計算します
-            SELECT
-                user_id,
-                MAX(
-                    CASE WHEN sum_tran.category = "Food"
-                            THEN sum_tran.total_c
-                            ELSE 0
-                    END
-                ) AS food_amount,
-                MAX(
-                    CASE WHEN sum_tran.category = "Sports"
-                            THEN sum_tran.total_c
-                            ELSE 0
-                    END
-                ) AS sports_amount,
-                MAX(
-                    CASE WHEN sum_tran.category = "Fashion"
-                            THEN sum_tran.total_c
-                            ELSE 0
-                    END
-                ) AS fashion_amount,
-                MAX(
-                    CASE WHEN sum_tran.category = "Necessities"
-                            THEN sum_tran.total_c
-                            ELSE 0
-                    END
-                ) AS necessities_amount,
-                MAX(
-                    CASE WHEN sum_tran.category = "Book-CD-DVD"
-                            THEN sum_tran.total_c
-                            ELSE 0
-                    END
-                ) AS Book_CD_DVD_amount,
-                SUM(total_c) AS total
+-- LEFT JOIN テーブル1
+left join (
+      -- テーブル　1
+      -- STEP 3　総額を集計し、カテゴリ毎の総額とLEFT JOINする
 
-            FROM(
-                    -- ユーザー毎に、１年間の購入額（カテゴリ毎）を計算します
-                    SELECT
-                        user_id,
-                        category,
-                        sum(amount) AS total_c
-                    FROM 
-                        `data-sci-acad-learn-sql.TW14_N10.user_tran`
-                    GROUP BY
-                        user_id,
-                        category
-                    ORDER BY
-                        user_id,
-                        category
-            ) sum_tran
-            GROUP BY
-                user_id
-) AS summary_tran
+      select
+            user_id,
+            sum(amount) AS total_amount
+      from `data-sci-acad-learn-sql.TW14_N10.user_tran` AS user_tran
+      group by
+            user_tran.user_id
+) AS total_amount
+ON
+    shop_user.user_id = total_amount.user_id
 
+left join ( 
+        -- テーブル　1
+        --　step ２ pivot テーブル(行を列に)
+        select
+              amount_summary_c.user_id,
+              MAX(CASE WHEN amount_summary_c.category = "Book-CD-DVD"
+                        THEN amount_summary_c.sub_total
+                        ELSE 0
+                  END) AS book_cd_dvd_total,
+              MAX(CASE WHEN amount_summary_c.category = "Fashion"
+                        THEN amount_summary_c.sub_total
+                        ELSE 0
+                  END ) AS fashion_total,
+              MAX(CASE WHEN amount_summary_c.category = "Food"
+                        THEN amount_summary_c.sub_total
+                        ELSE 0
+                  END ) AS food_total,
+              MAX(CASE WHEN amount_summary_c.category = "Necessities"
+                        THEN amount_summary_c.sub_total
+                        ELSE 0
+                  END ) AS necessities_total,
+              MAX(CASE WHEN amount_summary_c.category = "Sports"
+                        THEN amount_summary_c.sub_total
+                        ELSE 0
+                  END ) AS sports_total
+        from (
+            -- テーブル 1 
+            --　step 1
+            --　カテゴリ毎の総額を集計する
+              select
+                    user_tran.user_id,
+                    user_tran.category,
+                    sum(amount) AS sub_total
+              from `data-sci-acad-learn-sql.TW14_N10.user_tran` AS user_tran
+              group by
+                    user_tran.user_id,
+                    user_tran.category
+              order by
+                    user_tran.user_id,
+                    user_tran.category
+        ) AS amount_summary_c
+        -- reminder during pivot table must use group by
+        group by
+            amount_summary_c.user_id
+
+) AS sub_total_table
 ON 
-    shop_user.user_id = summary_tran.user_id
-
-
--- for double checking purpose
--- U000005 total should be
--- food_total	fashion_total	sports_total	necesssities_total	book_cd_dvd_total	
--- 86580.0	    33770.0	        22060.0	        12240.0	            1870.0	            
--- total	    age_group
--- 156520.0	    50-59 
--- WHERE
---    shop_user.user_id = "U000005"
+    shop_user.user_id = sub_total_table.user_id
+--　left join テーブル 2 
+left join (
+-- table 2
+--  step 3
+-- 総購入回数と集計する
+select
+      category_purchases.*,
+      (category_purchases.Book_CD_DVD_buy_number +
+       category_purchases.Fashion_buy_number +
+       category_purchases.Food_buy_number +
+       category_purchases.Necessities_buy_number +
+       category_purchases.Sports_buy_number) AS total_buy_number
+from (
+              -- table ２ step 2
+              -- テーブルをpivotする（行を列に）
+              select
+                    user_id,
+                    MAX(CASE WHEN number_purchase.category = "Book-CD-DVD"
+                              THEN number_purchase.number_purchases
+                              ELSE 0
+                        END) AS Book_CD_DVD_buy_number,
+                    MAX(CASE WHEN number_purchase.category = "Fashion"
+                              THEN number_purchase.number_purchases
+                              ELSE 0
+                        END) AS Fashion_buy_number,
+                    MAX(CASE WHEN number_purchase.category = "Food"
+                              THEN number_purchase.number_purchases
+                              ELSE 0
+                        END) AS Food_buy_number,
+                    MAX(CASE WHEN number_purchase.category = "Necessities"
+                              THEN number_purchase.number_purchases
+                              ELSE 0
+                        END) AS Necessities_buy_number,
+                    MAX(CASE WHEN number_purchase.category = "Sports"
+                              THEN number_purchase.number_purchases
+                              ELSE 0
+                        END) AS Sports_buy_number,
+              from (
+                    -- table ２ step 1
+                    -- カテゴリ毎に購入回数を集計する。 
+                    select
+                          user_id,
+                          category,
+                          count(category) AS number_purchases
+                    from `data-sci-acad-learn-sql.TW14_N10.user_tran`
+                    group by
+                          user_id,
+                          category
+                    order by
+                          user_id,
+                          category
+              ) AS number_purchase
+              GROUP BY
+                    user_id
+) as category_purchases
+) as purchase_no
+on 
+      shop_user.user_id = purchase_no.user_id;
