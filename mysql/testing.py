@@ -6,3 +6,4 @@ for row in excel_data.iterrows():
     print(row)
     # testlist = row[1].values
     # print(testlist)
+    
