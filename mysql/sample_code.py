@@ -6,8 +6,8 @@ from mysql.connector import Error
 import pandas as pd
 conn = sql.connect (
     host = "localhost",
-    user = "root",
-    password = "ZAQs8271911c$",
+    user = "hsuan",
+    password = "Zs8271911c",
     auth_plugin='mysql_native_password',
     buffered = True,          # using this for reading table, panda dont need it
     #multi=True,                 # if wanna use mulitple query

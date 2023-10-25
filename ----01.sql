@@ -6,7 +6,3 @@ begin
 end;
 
 select dbo.myf(std_id) from student
-
-
-
-testing
